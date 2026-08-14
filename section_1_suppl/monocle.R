@@ -88,4 +88,59 @@ cds <- reduceDimension(cds, max_components = 2,
 
 ## order cells ----
 cds <- orderCells(cds)
+cds <- orderCells(cds, root_state = 3)
+
 plot_cell_trajectory(cds)
+
+## vis ----
+
+str(cds$celltype)
+cds$celltype <- factor(cds$celltype)
+levels(unique(cds$celltype))
+new_order <- c("AT2_like", "SCGB3A2_pos", "CRABP2_pos")
+cds$celltype <- factor(
+  cds$celltype,
+  levels = new_order
+)
+cds
+plot_cell_trajectory(cds, color_by = "celltype")
+plot_cell_trajectory(cds, color_by = "annotation")
+
+cds$annotation <- LUAD_main$annotation
+p <- plot_cell_trajectory(cds, color_by = "celltype") +
+  facet_wrap(~seurat_clusters, nrow = 1)
+ggsave("monocle_celltype_seurat.pdf", p, height = 4, width = 10)
+
+
+p <- plot_cell_trajectory(cds, color_by = "annotation") +
+  facet_wrap(~annotation, nrow = 1)
+p
+
+plot_cell_trajectory(cds, color_by = "State")
+plot_cell_trajectory(cds, color_by = "Pseudotime")
+
+max(cds$Pseudotime)
+min(cds$Pseudotime)
+
+## plot_genes_in_pseudotime ----
+
+to_be_tested <- row.names(
+  subset(fData(cds),
+         gene_short_name %in% c("SFTPC", "SCGB3A2", "HPGD", "CRABP2", "MARCKSL1")))
+cds_subset <- cds[to_be_tested,]
+plot_genes_in_pseudotime(cds_subset, color_by = "Pseudotime")
+
+
+## plot single gene ----
+colnames(pData(cds))
+pData(cds)$SCGB3A2 =log2(exprs(cds)['SCGB3A2',]+1)
+pData(cds)$SFTPC =log2(exprs(cds)['SFTPC',]+1)
+pData(cds)$CRABP2 =log2(exprs(cds)['CRABP2',]+1)
+library(ggsci)
+p1=plot_cell_trajectory(cds, color_by="SCGB3A2") + scale_color_gsea()
+p1
+plot_cell_trajectory(cds, color_by="SFTPC") + scale_color_gsea()
+plot_cell_trajectory(cds, color_by="CRABP2") + scale_color_gsea()
+
+
+table(LUAD_main$annotation, LUAD_main$predicted.celltype)
